@@ -236,6 +236,14 @@ for i = 1:nsteps
             RRT(icond) = min((ER(icond)-VT(icond)).*(1-A4(icond).^(WT(icond)./(ER(icond)-VT(icond)))),WT(icond));
             
             
+            
+            if any(RRT<0)
+                disp('negative rrt')
+            end
+            
+            
+            
+            
         case 2
             
             % RRT=DMIN1(WT*(1.-DEXP(-(ER(J)-VT)*A(4))),(ER(J)-VT))

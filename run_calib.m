@@ -138,7 +138,9 @@ xlabel('Months after start of simulation period')
 
 linkaxes(ax,'x')
 
-print(['results\',ip.name '.png'],'-dpng','-r400')
+mc_str = [num2str(settings.mc(1)) num2str(settings.mc(2)) num2str(settings.mc(3)) num2str(settings.mc(4))];
+
+print(['results\',ip.name '_' mc_str '.png'],'-dpng','-r400')
 
 close all
 
