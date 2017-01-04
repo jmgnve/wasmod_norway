@@ -9,10 +9,19 @@ function NS = run_calib(ip,ed,settings)
 %   ed - struct containing evaluation data
 %   settings - struct containing settings
 
-% Parameter limits
+% Parameter limits for actual evapotranspiration model 1
 
-A_lower = [0   -0.5   0     0     0    0   0.08];
-A_upper = [1     0    2     2     10   10  0.20];
+if settings.mc(2) == 1
+    A_lower = [0   -0.5   0     0     0    0   0.08];
+    A_upper = [1     0    2     1     10   10  0.20];
+end
+
+% Parameter limits for actual evapotranspiration model 2
+
+if settings.mc(2) == 2
+    A_lower = [0   -0.5   0     0     0    0   0.08];
+    A_upper = [1     0    2     10    10   10  0.20];
+end
 
 % Run Monte Carlo simulations
 
@@ -32,6 +41,7 @@ pa.fa = ip.fa;
 sim = wasmod(st,ip,pa,settings.mc,settings.nruns,false);
 
 err = repmat(ed.Q,settings.nruns,1) - sim.Q;
+err = err(:,settings.warmup:end);
 err = err(:,~any(isnan(err),1));
 sse = sum(err.^2,2);
 imin = find(sse==min(sse),1);
@@ -110,7 +120,7 @@ info = {'WASMOD setup:';
         
 % Plot results
 
-figure('position',[100 100 1400 800])
+figure('position',[100 100 1400 800],'visible','off')
 
 ax(1) = subplot('position',[0.1 0.7 0.6 1/4]);
 

@@ -11,7 +11,7 @@ load('C:\Users\jmg\Dropbox\Work\Data\hydro_data\norway_data.mat')
 counter = 1;
 
 for mc_1 = [1 3 4]
-    for mc_2 = [2]
+    for mc_2 = [1 2]
         for mc_3 = [1 2]
             for mc_4 = [1 2]
                 mc(1,counter) = mc_1;
@@ -29,7 +29,7 @@ end
 
 for imc = 1:size(mc,2)
     
-    for iwsh = 1:5   %length(data)
+    for iwsh = 1:length(data)
         
         % Prepare data
         
@@ -39,7 +39,7 @@ for imc = 1:size(mc,2)
         
         settings.mc = mc(:,imc);
         settings.warmup = 37;
-        settings.nruns = 1;
+        settings.nruns = 100000;
         settings.AK = 0;   % Initial snow storage
         settings.ST = 150; % Initial land moisture
         
@@ -50,3 +50,14 @@ for imc = 1:size(mc,2)
     end
     
 end
+
+
+%% Save results
+
+save('results.mat', 'ns', 'mc');
+
+
+
+
+
+
