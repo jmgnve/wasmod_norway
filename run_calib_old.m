@@ -13,49 +13,17 @@ function [NS, pa] = run_calib(ip,ed,settings)
 
 % Parameter limits for actual evapotranspiration model 1
 
-
-
 if settings.mc(2) == 1
-    A_lower = [0   -6    0     0     0    0];
-    A_upper = [6    0    2     1     10   10];
+    A_lower = [0   -0.5   0     0     0    0   0.08];
+    A_upper = [1     0    2     1     10   10  0.20];
 end
 
 % Parameter limits for actual evapotranspiration model 2
 
 if settings.mc(2) == 2
-    A_lower = [0   -6    0     0     0    0];
-    A_upper = [6    0    2     10    10   10];
+    A_lower = [0   -0.5   0     0     0    0   0.08];
+    A_upper = [1     0    2     10    10   10  0.20];
 end
-
-
-
-
-
-
-
-% if settings.mc(2) == 1
-%     A_lower = [0   -0.5   0     0     0    0];
-%     A_upper = [1     0    2     1     10   10];
-% end
-% 
-% % Parameter limits for actual evapotranspiration model 2
-% 
-% if settings.mc(2) == 2
-%     A_lower = [0   -0.5   0     0     0    0];
-%     A_upper = [1     0    2     10    10   10];
-% end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% Compute precipitation correction factor
-
-q_ave = 12 * mean(ed.Q(~isnan(ed.Q)));
-aet_ave = ip.aet_ave;
-prec_ave = ip.prec_ave;
-
-A7 = (q_ave + aet_ave) / prec_ave;
-
-A7 = A7 / 10;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -70,9 +38,8 @@ pa.A3 = A_lower(3) + (A_upper(3)-A_lower(3))*rand(1,settings.nruns);
 pa.A4 = A_lower(4) + (A_upper(4)-A_lower(4))*rand(1,settings.nruns);
 pa.A5 = A_lower(5) + (A_upper(5)-A_lower(5))*rand(1,settings.nruns);
 pa.A6 = A_lower(6) + (A_upper(6)-A_lower(6))*rand(1,settings.nruns);
-% pa.A7 = A_lower(7) + (A_upper(7)-A_lower(7))*rand(1,settings.nruns);
+pa.A7 = A_lower(7) + (A_upper(7)-A_lower(7))*rand(1,settings.nruns);
 
-pa.A7 = A7;
 pa.fa = ip.fa;
 
 sim = wasmod(st,ip,pa,settings.mc,settings.nruns,false);
@@ -90,51 +57,51 @@ if settings.plot_res
     
     figure('position',[100 100 1400 800],'visible','off')
     
-    subplot(3,2,1)
+    subplot(3,3,1)
     plot(pa.A1(NS_vec>0), NS_vec(NS_vec>0), '.')
     xlabel('A1')
     ylabel('NS eff')
     title('Snow param 1')
     
-    subplot(3,2,2)
+    subplot(3,3,2)
     plot(pa.A2(NS_vec>0), NS_vec(NS_vec>0), '.')
     xlabel('A2')
     ylabel('NS eff')
     title('Snow param 2')
     
-    subplot(3,2,3)
+    subplot(3,3,3)
     plot(pa.A3(NS_vec>0), NS_vec(NS_vec>0), '.')
     xlabel('A3')
     ylabel('NS eff')
     title('PET param')
     
-    subplot(3,2,4)
+    subplot(3,3,4)
     plot(pa.A4(NS_vec>0), NS_vec(NS_vec>0), '.')
     xlabel('A4')
     ylabel('NS eff')
     title('AET param')
     
-    subplot(3,2,5)
+    subplot(3,3,5)
     plot(pa.A5(NS_vec>0), NS_vec(NS_vec>0), '.')
     xlabel('A5')
     ylabel('NS eff')
     title('Slow flow param')
     
-    subplot(3,2,6)
+    subplot(3,3,6)
     plot(pa.A6(NS_vec>0), NS_vec(NS_vec>0), '.')
     xlabel('A6')
     ylabel('NS eff')
     title('Fast flow param')
     
-%     subplot(3,3,7)
-%     plot(pa.A7(NS_vec>0), NS_vec(NS_vec>0), '.')
-%     xlabel('A7')
-%     ylabel('NS eff')
-%     title('Prec corr')
+    subplot(3,3,7)
+    plot(pa.A7(NS_vec>0), NS_vec(NS_vec>0), '.')
+    xlabel('A7')
+    ylabel('NS eff')
+    title('Prec corr')
     
     mc_str = [num2str(settings.mc(1)) num2str(settings.mc(2)) num2str(settings.mc(3)) num2str(settings.mc(4))];
     
-    print(['results\', num2str(ip.stat) '_' mc_str '_dottyplt.png'],'-dpng','-r400')
+    print(['results\', ip.name '_' mc_str '_dottyplt.png'],'-dpng','-r400')
     
     close all
         
@@ -150,9 +117,9 @@ end
 
 imax = find(NS_vec==max(NS_vec),1);
 
-A_init  = [pa.A1(imax) pa.A2(imax) pa.A3(imax) pa.A4(imax) pa.A5(imax) pa.A6(imax)];
+A_init  = [pa.A1(imax) pa.A2(imax) pa.A3(imax) pa.A4(imax) pa.A5(imax) pa.A6(imax) pa.A7(imax)];
 
-par = fminsearchbnd(@(A) wasmod_wrapper(A,A7,ip,settings,ed.Q),A_init,A_lower,A_upper,optimset('Display','on','MaxFunEvals',20000,'MaxIter',20000));
+par = fminsearchbnd(@(A) wasmod_wrapper(A,ip,settings,ed.Q),A_init,A_lower,A_upper,optimset('Display','on','MaxFunEvals',20000,'MaxIter',20000));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -167,7 +134,7 @@ pa.A3 = par(3);
 pa.A4 = par(4);
 pa.A5 = par(5);
 pa.A6 = par(6);
-pa.A7 = A7;
+pa.A7 = par(7);
 
 pa.fa = ip.fa;
 
@@ -192,7 +159,7 @@ disp(['A(3) = ' num2str(par(3))])
 disp(['A(4) = ' num2str(par(4))])
 disp(['A(5) = ' num2str(par(5))])
 disp(['A(6) = ' num2str(par(6))])
-disp(['A(7) = ' num2str(A7)])
+disp(['A(7) = ' num2str(par(7))])
 
 disp('Optimal performance:')
 disp(['NS eff = ' num2str(NS)])
@@ -216,11 +183,7 @@ info = {'WASMOD setup:';
     ['  A(4) = ' num2str(par(4))];
     ['  A(5) = ' num2str(par(5))];
     ['  A(6) = ' num2str(par(6))];
-    ['  prec corr = ' num2str(10*A7) ' unscaled!'];
-    '';
-    'Actual evapotranspiration:';
-    ['  Simulated = ' num2str(12*mean(sim.AET))];
-    ['  Satelite = ' num2str(mean(ip.aet_ave))];
+    ['  prec corr = ' num2str(10*par(7))];
     '';
     'Optimal performance:';
     ['  NS eff = ' num2str(NS)];
@@ -243,7 +206,7 @@ if settings.plot_res
     plot(sim.Q(settings.warmup:end),'r')
     ylabel('Discharge')
     legend('Obs','Sim')
-    text(1.05,-0.3,info,'units','normalized')
+    text(1.05,0,info,'units','normalized')
     title(['Watershed: ' ip.name ' | Area: ' num2str(ip.area) ' km2'])
     
     ax(2) = subplot('position',[0.1 0.4 0.6 1/4]);
@@ -264,7 +227,7 @@ if settings.plot_res
     
     mc_str = [num2str(settings.mc(1)) num2str(settings.mc(2)) num2str(settings.mc(3)) num2str(settings.mc(4))];
     
-    print(['results\', num2str(ip.stat) '_' mc_str '_tseris.png'],'-dpng','-r400')
+    print(['results\',ip.name '_' mc_str '_tseris.png'],'-dpng','-r400')
     
     close all
     

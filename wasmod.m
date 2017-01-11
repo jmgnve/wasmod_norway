@@ -83,7 +83,7 @@ if nelem>1
     A4 = repmat(A4,nelem,1);
     A5 = repmat(A5,nelem,1);
     A6 = repmat(A6,nelem,1);
-    A7 = repmat(A7,nelem,1);
+%     A7 = repmat(A7,nelem,1);
 end
 
 if nruns>1

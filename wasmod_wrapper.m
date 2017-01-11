@@ -1,4 +1,4 @@
-function sse = wasmod_wrapper(A,ip,settings,Qobs)
+function sse = wasmod_wrapper(A,A7,ip,settings,Qobs)
 %WASMOD_WRAPPER Code needed for running parameter optimization routine
 %
 %   Function call:
@@ -23,7 +23,7 @@ pa.A3 = A(3);
 pa.A4 = A(4);
 pa.A5 = A(5);
 pa.A6 = A(6);
-pa.A7 = A(7);
+pa.A7 = A7;
 
 pa.fa = ip.fa;
 
