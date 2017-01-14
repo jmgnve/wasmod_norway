@@ -1,11 +1,12 @@
-function sse = wasmod_wrapper(A,A7,ip,settings,Qobs)
+function res = wasmod_wrapper(A, A7, ip, settings, Qobs)
 %WASMOD_WRAPPER Code needed for running parameter optimization routine
 %
 %   Function call:
-%   sse = wasmod_wrapper(A,ip,settings,Qobs)
+%   res = wasmod_wrapper(A, A7, ip, settings, Qobs)
 %
 %   Input variables:
 %   A - vector with parameter values
+%   A7 - precipitation correction factor
 %   ip - struct containing input variables
 %   settings - struct containing settings
 %   Qobs - observed discharge
@@ -23,22 +24,19 @@ pa.A3 = A(3);
 pa.A4 = A(4);
 pa.A5 = A(5);
 pa.A6 = A(6);
-pa.A7 = A7;
 
+pa.A7 = A7;
 pa.fa = ip.fa;
 
 % Run model
 
-sim = wasmod(st,ip,pa,settings.mc,1,false);
+sim = wasmod(st, ip, pa, settings.mc, 1, false);
 
 % Compute performance measure
 
-sim.Q = sim.Q(settings.warmup:end); 
-Qobs = Qobs(settings.warmup:end);
-sim.Q = sim.Q(:); Qobs = Qobs(:);
-inan = isnan(sim.Q) | isnan(Qobs);
+[ns, ~, ~, ~, ~] =  performance(sim.Q, Qobs, settings.warmup);
 
-sse = sum((sim.Q(~inan)-Qobs(~inan)).^2);
+res = 1 - ns;
 
 end
 

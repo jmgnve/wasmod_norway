@@ -1,4 +1,4 @@
-figures/
-optimal_param/
-results/
+calibration_results/
+obsolete/
+results_*/
 tables/

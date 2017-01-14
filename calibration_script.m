@@ -26,7 +26,7 @@ counter = 1;
 
 for mc_1 = [3]
     for mc_2 = [1]
-        for mc_3 = [1]
+        for mc_3 = [1 2]
             for mc_4 = [1]
                 mc(1,counter) = mc_1;
                 mc(2,counter) = mc_2;
@@ -37,7 +37,6 @@ for mc_1 = [3]
         end
     end
 end
-
 
 
 %% Calibrate model
@@ -52,11 +51,11 @@ for imc = 1:size(mc,2)
         
         % Model settings
         
-        settings.mc = mc(:,imc);
-        settings.warmup = 37;
-        settings.nruns = 100000;
-        settings.AK = 0;   % Initial snow storage
-        settings.ST = 150; % Initial land moisture
+        settings.mc       = mc(:,imc);
+        settings.warmup   = 37;
+        settings.nruns    = 100000;
+        settings.AK       = 0;
+        settings.ST       = 150;
         settings.plot_res = true;
         
         % Run calibration
@@ -66,20 +65,6 @@ for imc = 1:size(mc,2)
     end
     
 end
-
-
-%%%%%%%%% THIS WILL NOT WORK FOR MANY COMBINATIONS! NEEDS FIX! %%%%%%%%%%%%
-
-
-%% Remove duplicate stations
-
-% rowname = {data(:).name};
-% 
-% [~, ikeep] = unique(rowname);
-% 
-% data = data(ikeep);
-% ns = ns(ikeep);
-% opt_param = opt_param(ikeep);
 
 
 %% Results to table
@@ -97,15 +82,9 @@ res_table = array2table(ns);
 res_table.Properties.RowNames = rowname;
 res_table.Properties.VariableNames = colname;
 
-writetable(res_table, 'tables\wasmod_nseff.csv', 'Delimiter', ';', 'WriteVariableNames', true, 'WriteRowNames', true)
+writetable(res_table, 'calibration_results\wasmod_calib_nse.csv', 'Delimiter', ';', 'WriteVariableNames', true, 'WriteRowNames', true)
 
 
 %% Save optimal parameter values
 
-save('optimal_param\optimal_param.mat', 'opt_param')
-
-
-
-
-
-
+save('calibration_results\optimal_param.mat', 'opt_param')

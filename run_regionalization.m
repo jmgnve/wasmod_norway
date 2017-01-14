@@ -25,4 +25,8 @@ end
 
 save(fullfile(folder_save, 'final_res.mat'), 'final_res')
 
+% Results to tables
+
+res2table(folder_save, final_res)
+
 end

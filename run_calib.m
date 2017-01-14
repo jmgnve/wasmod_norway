@@ -1,8 +1,8 @@
-function [NS, pa] = run_calib(ip,ed,settings)
+function [ns, pa] = run_calib(ip,ed,settings)
 %RUN_CALIB Calibration of WASMOOD
 %
 %   Function call:
-%   NS = run_calib(ip,ed,settings)
+%   [ns, pa] = run_calib(ip,ed,settings)
 %
 %   Input variables:
 %   ip - struct containing input variables
@@ -12,8 +12,6 @@ function [NS, pa] = run_calib(ip,ed,settings)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Parameter limits for actual evapotranspiration model 1
-
-
 
 if settings.mc(2) == 1
     A_lower = [0   -6    0     0     0    0];
@@ -26,24 +24,6 @@ if settings.mc(2) == 2
     A_lower = [0   -6    0     0     0    0];
     A_upper = [6    0    2     10    10   10];
 end
-
-
-
-
-
-
-
-% if settings.mc(2) == 1
-%     A_lower = [0   -0.5   0     0     0    0];
-%     A_upper = [1     0    2     1     10   10];
-% end
-% 
-% % Parameter limits for actual evapotranspiration model 2
-% 
-% if settings.mc(2) == 2
-%     A_lower = [0   -0.5   0     0     0    0];
-%     A_upper = [1     0    2     10    10   10];
-% end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -70,17 +50,15 @@ pa.A3 = A_lower(3) + (A_upper(3)-A_lower(3))*rand(1,settings.nruns);
 pa.A4 = A_lower(4) + (A_upper(4)-A_lower(4))*rand(1,settings.nruns);
 pa.A5 = A_lower(5) + (A_upper(5)-A_lower(5))*rand(1,settings.nruns);
 pa.A6 = A_lower(6) + (A_upper(6)-A_lower(6))*rand(1,settings.nruns);
-% pa.A7 = A_lower(7) + (A_upper(7)-A_lower(7))*rand(1,settings.nruns);
 
 pa.A7 = A7;
 pa.fa = ip.fa;
 
-sim = wasmod(st,ip,pa,settings.mc,settings.nruns,false);
+sim = wasmod(st, ip, pa, settings.mc, settings.nruns, false);
 
 for irun = 1:settings.nruns
-    NS_vec(irun) = ns_eff(sim.Q(irun,settings.warmup:end),ed.Q(settings.warmup:end));
+    ns_vec(irun) = performance(sim.Q(irun,:), ed.Q, settings.warmup);
 end
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -91,53 +69,47 @@ if settings.plot_res
     figure('position',[100 100 1400 800],'visible','off')
     
     subplot(3,2,1)
-    plot(pa.A1(NS_vec>0), NS_vec(NS_vec>0), '.')
+    plot(pa.A1(ns_vec>0), ns_vec(ns_vec>0), '.')
     xlabel('A1')
     ylabel('NS eff')
     title('Snow param 1')
     
     subplot(3,2,2)
-    plot(pa.A2(NS_vec>0), NS_vec(NS_vec>0), '.')
+    plot(pa.A2(ns_vec>0), ns_vec(ns_vec>0), '.')
     xlabel('A2')
     ylabel('NS eff')
     title('Snow param 2')
     
     subplot(3,2,3)
-    plot(pa.A3(NS_vec>0), NS_vec(NS_vec>0), '.')
+    plot(pa.A3(ns_vec>0), ns_vec(ns_vec>0), '.')
     xlabel('A3')
     ylabel('NS eff')
     title('PET param')
     
     subplot(3,2,4)
-    plot(pa.A4(NS_vec>0), NS_vec(NS_vec>0), '.')
+    plot(pa.A4(ns_vec>0), ns_vec(ns_vec>0), '.')
     xlabel('A4')
     ylabel('NS eff')
     title('AET param')
     
     subplot(3,2,5)
-    plot(pa.A5(NS_vec>0), NS_vec(NS_vec>0), '.')
+    plot(pa.A5(ns_vec>0), ns_vec(ns_vec>0), '.')
     xlabel('A5')
     ylabel('NS eff')
     title('Slow flow param')
     
     subplot(3,2,6)
-    plot(pa.A6(NS_vec>0), NS_vec(NS_vec>0), '.')
+    plot(pa.A6(ns_vec>0), ns_vec(ns_vec>0), '.')
     xlabel('A6')
     ylabel('NS eff')
     title('Fast flow param')
     
-%     subplot(3,3,7)
-%     plot(pa.A7(NS_vec>0), NS_vec(NS_vec>0), '.')
-%     xlabel('A7')
-%     ylabel('NS eff')
-%     title('Prec corr')
-    
     mc_str = [num2str(settings.mc(1)) num2str(settings.mc(2)) num2str(settings.mc(3)) num2str(settings.mc(4))];
     
-    print(['results\', num2str(ip.stat) '_' mc_str '_dottyplt.png'],'-dpng','-r400')
+    print(['calibration_results\figures\', num2str(ip.stat) '_' mc_str '_dottyplt.png'],'-dpng','-r400')
     
     close all
-        
+    
 end
 
 % NS_mat = [pa.A1(NS_vec>0)' pa.A2(NS_vec>0)' pa.A3(NS_vec>0)' ...
@@ -148,11 +120,11 @@ end
 
 % Optimize parameters using fminsearch
 
-imax = find(NS_vec==max(NS_vec),1);
+imax = find(ns_vec==max(ns_vec),1);
 
 A_init  = [pa.A1(imax) pa.A2(imax) pa.A3(imax) pa.A4(imax) pa.A5(imax) pa.A6(imax)];
 
-par = fminsearchbnd(@(A) wasmod_wrapper(A,A7,ip,settings,ed.Q),A_init,A_lower,A_upper,optimset('Display','on','MaxFunEvals',20000,'MaxIter',20000));
+par = fminsearchbnd(@(A) wasmod_wrapper(A, A7, ip, settings,ed.Q), A_init, A_lower, A_upper,optimset('Display','on','MaxFunEvals',20000,'MaxIter',20000));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -167,13 +139,13 @@ pa.A3 = par(3);
 pa.A4 = par(4);
 pa.A5 = par(5);
 pa.A6 = par(6);
-pa.A7 = A7;
 
+pa.A7 = A7;
 pa.fa = ip.fa;
 
-sim = wasmod(st,ip,pa,settings.mc,1,true);
+sim = wasmod(st, ip, pa, settings.mc, 1, true);
 
-NS = ns_eff(sim.Q(settings.warmup:end),ed.Q(settings.warmup:end));
+ns = performance(sim.Q, ed.Q, settings.warmup);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -195,7 +167,7 @@ disp(['A(6) = ' num2str(par(6))])
 disp(['A(7) = ' num2str(A7)])
 
 disp('Optimal performance:')
-disp(['NS eff = ' num2str(NS)])
+disp(['NS eff = ' num2str(ns)])
 
 % Check water balance
 
@@ -220,10 +192,10 @@ info = {'WASMOD setup:';
     '';
     'Actual evapotranspiration:';
     ['  Simulated = ' num2str(12*mean(sim.AET))];
-    ['  Satelite = ' num2str(mean(ip.aet_ave))];
+    ['  Satellite = ' num2str(mean(ip.aet_ave))];
     '';
     'Optimal performance:';
-    ['  NS eff = ' num2str(NS)];
+    ['  NS eff = ' num2str(ns)];
     '';
     'Runoff efficiency:';
     ['  Q/P = ' num2str(ip.re_eff)]};
@@ -264,7 +236,7 @@ if settings.plot_res
     
     mc_str = [num2str(settings.mc(1)) num2str(settings.mc(2)) num2str(settings.mc(3)) num2str(settings.mc(4))];
     
-    print(['results\', num2str(ip.stat) '_' mc_str '_tseris.png'],'-dpng','-r400')
+    print(['calibration_results\figures\', num2str(ip.stat) '_' mc_str '_tseris.png'],'-dpng','-r400')
     
     close all
     

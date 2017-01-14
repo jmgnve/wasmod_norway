@@ -6,10 +6,16 @@ max_doners      = settings.max_doners;
 mc              = settings.mc;
 cmb_method      = settings.cmb_method;
 weighting       = settings.weighting;
-plot_fig        = settings.plot_fig;
 local_prec_corr = settings.local_prec_corr;
+% plot_fig        = settings.plot_fig;
+
+% Compute catchment descriptors
+
+data = catchment_descriptors(data);
 
 % Loop over number of doner catchments
+
+final_res = [];
 
 for ndoner = 1:max_doners
     
@@ -32,6 +38,7 @@ for ndoner = 1:max_doners
         % Final selection of doner catchments
         
         idoner = isorted(1:ndoner);
+        dist = dist(1:ndoner);
         
         % Run regionalization for output average or parameter average method
         
@@ -79,16 +86,16 @@ for ndoner = 1:max_doners
                 
                 % Assign outputs to matrices
                 
-                for idoner = 1:ndoner
-                    qsim_mat(:, idoner)  = sim(idoner).Q;
-                    temp_mat(:, idoner)  = sim(idoner).TEMP;
-                    prec_mat(:, idoner)  = sim(idoner).PREC;
-                    melt_mat(:, idoner)  = sim(idoner).MELT;
-                    rain_mat(:, idoner)  = sim(idoner).RAIN;
-                    fast_mat(:, idoner)  = sim(idoner).FAST;
-                    slow_mat(:, idoner)  = sim(idoner).SLOW;
-                    store_mat(:, idoner) = sim(idoner).STORE;
-                    aet_mat(:, idoner)   = sim(idoner).AET;
+                for isim = 1:ndoner
+                    qsim_mat(:, isim)  = sim(isim).Q;
+                    temp_mat(:, isim)  = sim(isim).TEMP;
+                    prec_mat(:, isim)  = sim(isim).PREC;
+                    melt_mat(:, isim)  = sim(isim).MELT;
+                    rain_mat(:, isim)  = sim(isim).RAIN;
+                    fast_mat(:, isim)  = sim(isim).FAST;
+                    slow_mat(:, isim)  = sim(isim).SLOW;
+                    store_mat(:, isim) = sim(isim).STORE;
+                    aet_mat(:, isim)   = sim(isim).AET;
                 end
                 
                 % Average model outputs
@@ -97,65 +104,36 @@ for ndoner = 1:max_doners
                     
                     case 'arithmetic'
                         
-                        qsim_ave = mean(qsim_mat,2);
+                        qsim_ave = mean(qsim_mat, 2);
                         
                     case 'wsh_area'
                         
+                        cd_area = [data_doner(idoner).cd_area];
                         
+                        qsim_ave = weighted_mean(qsim_mat, cd_area, 2);
                         
                     case 'idw'
                         
+                        qsim_ave = idw(qsim_mat, dist);
+                        
                 end
                 
-                % Compute performance measure
-                
-                ns = ns_eff(qsim_ave(settings.warmup:end),ed.Q(settings.warmup:end));
-                pb = pbias(qsim_ave(settings.warmup:end),ed.Q(settings.warmup:end));
-                                
                 % Store final results
                 
-                final_res(ndoner).qsim_all(:, itarget) = qsim_ave;
-                final_res(ndoner).qobs_all(:, itarget) = ed.Q;
-                final_res(ndoner).ns(itarget) = ns;
-                final_res(ndoner).pb(itarget) = pb;
-                final_res(ndoner).ndoner      = ndoner;
+                final_res = store_results(final_res, qsim_ave, ed.Q, ndoner, itarget, settings);
+                
+            case 'param_average'
                 
                 
-                % % %             % Plot outputs
-                % % %
-                % % %             if plot_fig
-                % % %
-                % % %                 figure('position', [100 100 1200 800], 'visible', 'off')
-                % % %
-                % % %                 subplot(2,1,1)
-                % % %                 plot(ed.Q, 'r', 'linewidth', 1.2)
-                % % %                 hold on
-                % % %                 plot(qsim_ave, 'b', 'linewidth', 1)
-                % % %                 axis tight
-                % % %                 box on
-                % % %                 xlabel('Months since start')
-                % % %                 ylabel('Runoff (mm/month')
-                % % %                 title(['Name: ' data_target.name ' Number: ' num2str(data_target.stat)])
-                % % %
-                % % %                 message = sprintf(['NS eff = ' num2str(ns(itarget),'%0.2f') '\n' ...
-                % % %                     'PBIAS = ' num2str(pb(itarget),'%0.1f')]);
-                % % %
-                % % %                 text(0.8, 0.8, message, 'units', 'normalized')
-                % % %
-                % % %                 subplot(2,1,2)
-                % % %                 plot(qsim_mat)
-                % % %                 axis tight
-                % % %                 box on
-                % % %                 xlabel('Months since start')
-                % % %                 ylabel('Runoff (mm/month')
-                % % %
-                % % %                 filename = ['figures\' num2str(data_target.stat) '_station.png'];
-                % % %
-                % % %                 print('-dpng', '-r600', filename)
-                % % %
-                % % %                 close all
-                % % %
-                % % %             end
+                
+                
+                
+                
+                
+                
+                
+                
+                
                 
         end
         
@@ -164,3 +142,45 @@ for ndoner = 1:max_doners
 end
 
 end
+
+
+
+
+
+
+
+% % %             % Plot outputs
+% % %
+% % %             if plot_fig
+% % %
+% % %                 figure('position', [100 100 1200 800], 'visible', 'off')
+% % %
+% % %                 subplot(2,1,1)
+% % %                 plot(ed.Q, 'r', 'linewidth', 1.2)
+% % %                 hold on
+% % %                 plot(qsim_ave, 'b', 'linewidth', 1)
+% % %                 axis tight
+% % %                 box on
+% % %                 xlabel('Months since start')
+% % %                 ylabel('Runoff (mm/month')
+% % %                 title(['Name: ' data_target.name ' Number: ' num2str(data_target.stat)])
+% % %
+% % %                 message = sprintf(['NS eff = ' num2str(ns(itarget),'%0.2f') '\n' ...
+% % %                     'PBIAS = ' num2str(pb(itarget),'%0.1f')]);
+% % %
+% % %                 text(0.8, 0.8, message, 'units', 'normalized')
+% % %
+% % %                 subplot(2,1,2)
+% % %                 plot(qsim_mat)
+% % %                 axis tight
+% % %                 box on
+% % %                 xlabel('Months since start')
+% % %                 ylabel('Runoff (mm/month')
+% % %
+% % %                 filename = ['figures\' num2str(data_target.stat) '_station.png'];
+% % %
+% % %                 print('-dpng', '-r600', filename)
+% % %
+% % %                 close all
+% % %
+% % %             end
