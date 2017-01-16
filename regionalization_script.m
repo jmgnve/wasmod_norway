@@ -30,7 +30,7 @@ for iexp = 1:size(tbl_exp,1)
     settings.reg_method      = tbl_exp.Reg_method{iexp};
     settings.cmb_method      = tbl_exp.Cmb_method{iexp};
     settings.weighting       = tbl_exp.Weighting{iexp};
-    settings.local_prec_corr = tbl_exp.Local_prec_corr(iexp);
+    settings.doner_prec_corr = tbl_exp.Doner_prec_corr(iexp);
     settings.max_doners      = tbl_exp.Max_doners(iexp);
     settings.run_experiment  = tbl_exp.Run_experiment(iexp);
     

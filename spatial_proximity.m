@@ -6,7 +6,7 @@ max_doners      = settings.max_doners;
 mc              = settings.mc;
 cmb_method      = settings.cmb_method;
 weighting       = settings.weighting;
-local_prec_corr = settings.local_prec_corr;
+doner_prec_corr = settings.doner_prec_corr;
 % plot_fig        = settings.plot_fig;
 
 % Compute catchment descriptors
@@ -46,11 +46,13 @@ for ndoner = 1:max_doners
             
             case 'output_average'
                 
-                % Run model for all doner catchments
+                % Prepare data and parameters
                 
                 [ip, ed] = prepare_data(data_target, 1);
                 
                 pa_target = opt_param{itarget};
+                
+                % Run model for all doner catchments
                 
                 icounter = 1;
                 
@@ -72,7 +74,7 @@ for ndoner = 1:max_doners
                     pa_target.A5 = pa_doner.A5;
                     pa_target.A6 = pa_doner.A6;
                     
-                    if local_prec_corr
+                    if doner_prec_corr
                         pa_target.A7 = pa_doner.A7;
                     end
                     
@@ -108,7 +110,7 @@ for ndoner = 1:max_doners
                         
                     case 'wsh_area'
                         
-                        cd_area = [data_doner(idoner).cd_area];
+                        cd_area = abs([data_doner(idoner).cd_area] - data_target.cd_area);
                         
                         qsim_ave = weighted_mean(qsim_mat, cd_area, 2);
                         
@@ -124,16 +126,77 @@ for ndoner = 1:max_doners
                 
             case 'param_average'
                 
+                % Prepare data and parameters
                 
+                [ip, ed] = prepare_data(data_target, 1);
                 
+                pa_target = opt_param{itarget};
                 
+                % Assign doner catchment parameter values to matrix
                 
+                icounter = 1;
                 
+                for iwsh = idoner
+                    
+                    pa_doner = opt_param{iwsh};
+                    
+                    A(1,icounter) = pa_doner.A1;
+                    A(2,icounter) = pa_doner.A2;
+                    A(3,icounter) = pa_doner.A3;
+                    A(4,icounter) = pa_doner.A4;
+                    A(5,icounter) = pa_doner.A5;
+                    A(6,icounter) = pa_doner.A6;
+                    A(7,icounter) = pa_doner.A7;
+                    
+                    icounter = icounter + 1;
+                    
+                end
                 
+                % Average parameter values
                 
+                switch weighting
+                    
+                    case 'arithmetic'
+                        
+                        A = mean(A, 2);
+                        
+                    case 'wsh_area'
+                        
+                        cd_area = abs([data_doner(idoner).cd_area] - data_target.cd_area);
+                        
+                        A = weighted_mean(A, cd_area, 2);
+                        
+                    case 'idw'
+                        
+                        A = idw(A, dist);
+                        
+                end
                 
+                % Assign parameter values
                 
+                pa_target.A1 = A(1);
+                pa_target.A2 = A(2);
+                pa_target.A3 = A(3);
+                pa_target.A4 = A(4);
+                pa_target.A5 = A(5);
+                pa_target.A6 = A(6);
                 
+                if doner_prec_corr
+                    pa_target.A7 = A(7);
+                end
+                
+                % Initilize model states
+                
+                st.AK = 0;
+                st.ST = 150;
+                
+                % Run model
+                
+                sim = wasmod(st, ip, pa_target, mc, 1, true);
+                
+                % Store final results
+                
+                final_res = store_results(final_res, sim.Q, ed.Q, ndoner, itarget, settings);
                 
         end
         

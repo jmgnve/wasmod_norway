@@ -1,7 +1,14 @@
+
+####################################################################################################
+
 # Libraries
 
 library(ggplot2)
 library(tidyr)
+
+####################################################################################################
+
+# Plot results
 
 # Folders with results
 
@@ -82,5 +89,92 @@ for (folder in folders) {
   dev.off()
   
 }
+
+
+####################################################################################################
+
+# Function for computing statistics
+
+summary_stat <- function(data, func) {
+  
+  if (func=="median") {
+    center_col <- apply(data, 2, median)
+    print("hej")
+  }
+  
+  if (func=="mean") {
+    center_col <- apply(data, 2, mean)
+  }
+  
+  best_center <- max(center_col)
+  
+  best_ndoner <- which(center_col == best_center)
+  
+  best_std <- sd( data[, best_ndoner])
+  
+  list(best_center = best_center, 
+       best_std = best_std, 
+       best_ndoner = best_ndoner)
+  
+}
+
+# Folders with results
+
+folders <- dir(path = ".", pattern = "results_")
+
+# Loop over folders
+
+nse <- c()
+nse_std <- c()
+nse_ndoner <- c()
+
+pbias <- c()
+pbias_std <- c()
+pbias_ndoner <- c()
+
+for (folder in folders) {
+  
+  # Analyze NSE
+  
+  filename <- paste(folder, "ns_table.txt", sep = "/")
+  
+  data <- read.csv(filename, header = TRUE)
+  
+  res <- summary_stat(data, "median")
+  
+  nse <- c(nse, res$best_center)
+  nse_std <- c(nse_std, res$best_std)
+  nse_ndoner <- c(nse_ndoner, res$best_ndoner)
+  
+  # Analyze PBIAS
+  
+  filename <- paste(folder, "pbias_table.txt", sep = "/")
+  
+  data <- read.csv(filename, header = TRUE)
+  
+  res <- summary_stat(data, "mean")
+  
+  pbias <- c(pbias, res$best_center)
+  pbias_std <- c(pbias_std, res$best_std)
+  pbias_ndoner <- c(pbias_ndoner, res$best_ndoner)
+  
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

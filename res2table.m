@@ -27,4 +27,11 @@ writetable(kge_table, fullfile(folder_save,'kge_table.txt'))
 writetable(rmse_table, fullfile(folder_save,'rmse_table.txt'))
 writetable(pbias_table, fullfile(folder_save,'pbias_table.txt'))
 
+% Write warnings
+
+if any(any(ismissing(ns_table))); warning('NaN in NSE results'); end
+if any(any(ismissing(kge_table))); warning('NaN in KGE results'); end
+if any(any(ismissing(rmse_table))); warning('NaN in RMSE results'); end
+if any(any(ismissing(pbias_table))); warning('NaN in PBIAS results'); end
+
 end
