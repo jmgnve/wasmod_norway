@@ -2,18 +2,19 @@ function run_regionalization(data, settings, opt_param, iexp)
 
 % Run regionalization experiment
 
-switch settings.reg_method
-    
-    case 'spatial_proximity'
-        
-        final_res = spatial_proximity(data, opt_param, settings);
-        
-    case 'physical_similarity'
-        
-        
-        
-        
-end
+final_res = regionalization_distance_based(data, opt_param, settings);
+
+% switch settings.reg_method
+%     
+%     case 'spatial_proximity'
+%         
+%         final_res = spatial_proximity(data, opt_param, settings);
+%         
+%     case 'physical_similarity'
+%         
+%         final_res = physical_similarity(data, opt_param, settings);
+%         
+% end
 
 % Store results
 

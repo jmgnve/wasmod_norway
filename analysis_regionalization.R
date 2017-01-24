@@ -5,6 +5,7 @@
 
 library(ggplot2)
 library(tidyr)
+library(readxl)
 
 ####################################################################################################
 
@@ -30,17 +31,10 @@ for (folder in folders) {
   
   nr_neg <- data.frame(nr_neg = colSums(data<0), ndoner = colnames(data))
   
-  data <- gather(data, ndoner, ns)
-  
-  p <- ggplot(data = data, aes(x = ndoner, y = ns)) + 
-    geom_boxplot() +
-    ylim(c(0,1)) + 
-    geom_text(data = nr_neg, aes(label = nr_neg, y = 1.0), colour = "red", size = 7) +
-    ggtitle("Numbers indicate number of catchments with NSE < 0") +
-    xlab("Number of doners") + 
-    ylab("NSE (-)")
-  
-  print(p)
+  boxplot(data, ylim=c(0, 1), 
+          xlab = "Number of doners", ylab = "NSE (-)",
+          main = "Red numbers: nr catchments with NSE < 0")
+  text(x = nr_neg$ndoner, y = 1, labels = nr_neg$nr_neg, col = "red")
   
   # Plot KGE
   
@@ -52,17 +46,10 @@ for (folder in folders) {
   
   nr_neg <- data.frame(nr_neg = colSums(data<0), ndoner = colnames(data))
   
-  data <- gather(data, ndoner, kge)
-  
-  p <- ggplot(data = data, aes(x = ndoner, y = kge)) + 
-    geom_boxplot() +
-    ylim(c(0,1)) + 
-    geom_text(data = nr_neg, aes(label = nr_neg, y = 1.0), colour = "red", size = 7) +
-    ggtitle("Numbers indicate number of catchments with KGE < 0") +
-    xlab("Number of doners") + 
-    ylab("KGE (-)")
-  
-  print(p)
+  boxplot(data, ylim=c(0, 1), 
+          xlab = "Number of doners", ylab = "KGE (-)",
+          main = "Red numbers: nr catchments with KGE < 0")
+  text(x = nr_neg$ndoner, y = 1, labels = nr_neg$nr_neg, col = "red")
   
   # Plot PBIAS
   
@@ -74,17 +61,10 @@ for (folder in folders) {
   
   nr_outside <- data.frame(nr_outside = colSums(abs(data) > 50), ndoner = colnames(data))
   
-  data <- gather(data, ndoner, pbias)
-  
-  p <- ggplot(data = data, aes(x = ndoner, y = pbias)) + 
-    geom_boxplot() +
-    ylim(c(-50,50)) + 
-    geom_text(data = nr_outside, aes(label = nr_outside, y = 50), colour = "red", size = 7) +
-    ggtitle("Numbers indicate number of catchments with pbias > abs(50)") +
-    xlab("Number of doners") + 
-    ylab("PBIAS (%)")
-  
-  print(p)
+  boxplot(data, ylim=c(-51, 51), 
+          xlab = "Number of doners", ylab = "PBIAS (%)",
+          main = "Red numbers: nr catchments with pbias > abs(50)")
+  text(x = nr_neg$ndoner, y = 10, labels = nr_neg$nr_neg, col = "red")
   
   dev.off()
   
@@ -99,7 +79,6 @@ summary_stat <- function(data, func) {
   
   if (func=="median") {
     center_col <- apply(data, 2, median)
-    print("hej")
   }
   
   if (func=="mean") {
@@ -110,7 +89,7 @@ summary_stat <- function(data, func) {
   
   best_ndoner <- which(center_col == best_center)
   
-  best_std <- sd( data[, best_ndoner])
+  best_std <- sd(data[, best_ndoner])
   
   list(best_center = best_center, 
        best_std = best_std, 
@@ -118,9 +97,13 @@ summary_stat <- function(data, func) {
   
 }
 
+# Load table with experiment settings
+
+tbl_settings <- read_excel("regionalization_experiments.xlsx")
+
 # Folders with results
 
-folders <- dir(path = ".", pattern = "results_")
+folders <- paste("results", 1:nrow(tbl_settings), sep = "_")
 
 # Loop over folders
 
@@ -160,12 +143,20 @@ for (folder in folders) {
   
 }
 
+# Create data frame with results
 
+tbl_results <- data.frame(nse = round(nse, digits = 2),
+                          nse_std = round(nse_std, digits = 2),
+                          nse_ndoner = nse_ndoner,
+                          pbias = round(pbias, digits = 2),
+                          pbias_std = round(pbias_std, digits = 2),
+                          pbias_ndoner = pbias_ndoner)
 
+tbl_all <- cbind(tbl_settings, tbl_results)
 
+# Save results to text file
 
-
-
+write.table(tbl_all, file = "results_summary.csv", quote = TRUE, sep = ";", row.names = FALSE, dec = ",")
 
 
 

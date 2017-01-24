@@ -1,0 +1,14 @@
+"Experiment";"Model";"Reg_method";"Cmb_method";"Weighting";"Doner_prec_corr";"Max_doners";"Run_experiment";"Catchment_desc";"nse";"nse_std";"nse_ndoner";"pbias";"pbias_std";"pbias_ndoner"
+1;"WASMOD";"spatial_proximity";"output_average";"arithmetic";1;10;0;"NaN";0,77;0,62;4;5,33;25,2;5
+2;"WASMOD";"spatial_proximity";"output_average";"arithmetic";0;10;0;"NaN";0,8;0,15;4;0,54;9,52;2
+3;"WASMOD";"spatial_proximity";"output_average";"idw";1;10;0;"NaN";0,76;0,55;9;5,29;24,85;5
+4;"WASMOD";"spatial_proximity";"output_average";"idw";0;10;0;"NaN";0,8;0,17;4;0,52;9,15;2
+5;"WASMOD";"spatial_proximity";"param_average";"arithmetic";1;10;0;"NaN";0,74;0,54;1;4,45;27,27;1
+6;"WASMOD";"spatial_proximity";"param_average";"arithmetic";0;10;0;"NaN";0,79;0,18;2;0,43;10,53;1
+7;"WASMOD";"spatial_proximity";"param_average";"idw";1;10;0;"NaN";0,74;0,74;4;4,45;27,27;1
+8;"WASMOD";"spatial_proximity";"param_average";"idw";0;10;0;"NaN";0,79;0,19;2;0,43;10,53;1
+9;"WASMOD";"physical_similarity";"output_average";"arithmetic";1;10;0;"area,lus_fore";0,67;0,5;10;8,33;39,05;1
+10;"WASMOD";"physical_similarity";"output_average";"arithmetic";1;10;1;"area,lus_fore,lus_lake";0,67;0,62;7;7,31;41,07;1
+11;"WASMOD";"physical_similarity";"output_average";"arithmetic";1;10;1;"area,elev_median,lus_fore,lus_lake";0,7;0,55;10;6,76;29,25;3
+12;"WASMOD";"physical_similarity";"output_average";"arithmetic";1;10;1;"area,elev_median";0,63;0,75;9;9,11;44,42;1
+13;"WASMOD";"physical_similarity";"output_average";"arithmetic";1;10;1;"area";0,62;0,53;9;8,71;28,4;8

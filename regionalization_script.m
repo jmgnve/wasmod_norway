@@ -33,6 +33,7 @@ for iexp = 1:size(tbl_exp,1)
     settings.doner_prec_corr = tbl_exp.Doner_prec_corr(iexp);
     settings.max_doners      = tbl_exp.Max_doners(iexp);
     settings.run_experiment  = tbl_exp.Run_experiment(iexp);
+    settings.catchment_desc  = tbl_exp.Catchment_desc(iexp);
     
     if settings.run_experiment
         

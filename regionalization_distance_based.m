@@ -1,17 +1,18 @@
-function final_res = spatial_proximity(data, opt_param, settings)
+function final_res = regionalization_distance_based(data, opt_param, settings)
 
 % Settings to variables
 
+reg_method      = settings.reg_method;
 max_doners      = settings.max_doners;
 mc              = settings.mc;
 cmb_method      = settings.cmb_method;
 weighting       = settings.weighting;
 doner_prec_corr = settings.doner_prec_corr;
-% plot_fig        = settings.plot_fig;
+catchment_desc  = strsplit(settings.catchment_desc{1},',');
 
-% Compute catchment descriptors
+% Normalize catchment descriptors
 
-data = catchment_descriptors(data);
+data = norm_catchment_desc(data);
 
 % Loop over number of doner catchments
 
@@ -29,16 +30,29 @@ for ndoner = 1:max_doners
         data_doner = data;
         data_doner(itarget) = [];
         
-        % Compute distance between target and doner catchments
+        % Compute distance measure
         
-        dist = sqrt(([data_doner(:).x_utm] - data_target.x_utm).^2 + ([data_doner(:).y_utm] - data_target.y_utm).^2);
-        
-        [dist, isorted] = sort(dist);
+        switch reg_method
+            
+            case 'spatial_proximity'
+                
+                % Compute distance between target and doner catchments
+                
+                dist_measure = sqrt(([data_doner(:).x_utm] - data_target.x_utm).^2 + ([data_doner(:).y_utm] - data_target.y_utm).^2);
+                
+            case 'physical_similarity'
+                
+                % Compute similarity index
+                
+                dist_measure = similarity_index(data_doner, data_target, catchment_desc);
+                
+        end
         
         % Final selection of doner catchments
         
+        [dist_measure, isorted] = sort(dist_measure);
         idoner = isorted(1:ndoner);
-        dist = dist(1:ndoner);
+        dist_measure = dist_measure(1:ndoner);
         
         % Run regionalization for output average or parameter average method
         
@@ -108,15 +122,9 @@ for ndoner = 1:max_doners
                         
                         qsim_ave = mean(qsim_mat, 2);
                         
-                    case 'wsh_area'
-                        
-                        cd_area = abs([data_doner(idoner).cd_area] - data_target.cd_area);
-                        
-                        qsim_ave = weighted_mean(qsim_mat, cd_area, 2);
-                        
                     case 'idw'
                         
-                        qsim_ave = idw(qsim_mat, dist);
+                        qsim_ave = idw(qsim_mat, dist_measure);
                         
                 end
                 
@@ -160,15 +168,9 @@ for ndoner = 1:max_doners
                         
                         A = mean(A, 2);
                         
-                    case 'wsh_area'
-                        
-                        cd_area = abs([data_doner(idoner).cd_area] - data_target.cd_area);
-                        
-                        A = weighted_mean(A, cd_area, 2);
-                        
                     case 'idw'
                         
-                        A = idw(A, dist);
+                        A = idw(A, dist_measure);
                         
                 end
                 
@@ -207,43 +209,3 @@ end
 end
 
 
-
-
-
-
-
-% % %             % Plot outputs
-% % %
-% % %             if plot_fig
-% % %
-% % %                 figure('position', [100 100 1200 800], 'visible', 'off')
-% % %
-% % %                 subplot(2,1,1)
-% % %                 plot(ed.Q, 'r', 'linewidth', 1.2)
-% % %                 hold on
-% % %                 plot(qsim_ave, 'b', 'linewidth', 1)
-% % %                 axis tight
-% % %                 box on
-% % %                 xlabel('Months since start')
-% % %                 ylabel('Runoff (mm/month')
-% % %                 title(['Name: ' data_target.name ' Number: ' num2str(data_target.stat)])
-% % %
-% % %                 message = sprintf(['NS eff = ' num2str(ns(itarget),'%0.2f') '\n' ...
-% % %                     'PBIAS = ' num2str(pb(itarget),'%0.1f')]);
-% % %
-% % %                 text(0.8, 0.8, message, 'units', 'normalized')
-% % %
-% % %                 subplot(2,1,2)
-% % %                 plot(qsim_mat)
-% % %                 axis tight
-% % %                 box on
-% % %                 xlabel('Months since start')
-% % %                 ylabel('Runoff (mm/month')
-% % %
-% % %                 filename = ['figures\' num2str(data_target.stat) '_station.png'];
-% % %
-% % %                 print('-dpng', '-r600', filename)
-% % %
-% % %                 close all
-% % %
-% % %             end
